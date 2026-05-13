@@ -77,4 +77,3 @@ Arquivos enviados no MVP sao salvos em `uploads/`. A camada `lib/storage/local-s
 - Adicionar storage externo.
 - Criar exportacao ZIP/PDF de dossies.
 - Adicionar OCR e busca semantica em fase posterior.
-# ndocs

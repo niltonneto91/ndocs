@@ -1,0 +1,398 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  gestor_documental
+  engenharia
+  operacao
+  manutencao
+  sms_compliance
+  auditor
+  fornecedor
+}
+
+enum TerminalStatus {
+  ativo
+  inativo
+  em_implantacao
+  arquivado
+}
+
+enum InstallationType {
+  terminal_combustiveis
+  base_distribuicao
+  posto_avancado
+  outro
+}
+
+enum AssetType {
+  tanque
+  tubulacao
+  bomba
+  bacia_contencao
+  plataforma_carregamento
+  sistema_incendio
+  drenagem_oleosa
+  instrumentacao
+  area_classificada
+  outro
+}
+
+enum AssetStatus {
+  ativo
+  inativo
+  em_manutencao
+  interditado
+  descomissionado
+}
+
+enum ProjectDiscipline {
+  civil
+  mecanica
+  tubulacao
+  eletrica
+  automacao
+  seguranca
+  meio_ambiente
+  operacao
+  manutencao
+  multidisciplinar
+}
+
+enum ProjectStatus {
+  planejado
+  em_andamento
+  em_revisao
+  concluido
+  suspenso
+  cancelado
+}
+
+enum DocumentStatus {
+  vigente
+  vencido
+  a_vencer
+  em_revisao
+  pendente
+  obsoleto
+  arquivado
+}
+
+enum DossierType {
+  anp
+  corpo_bombeiros
+  ambiental
+  inspecao
+  manutencao
+  projeto
+  auditoria
+  cliente
+  outro
+}
+
+enum DossierStatus {
+  rascunho
+  em_preparacao
+  pronto
+  arquivado
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  cnpj      String?
+  legalName String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users          User[]
+  terminals      Terminal[]
+  assets         Asset[]
+  projects       Project[]
+  categories     DocumentCategory[]
+  documents      Document[]
+  dossiers       Dossier[]
+  auditLogs      AuditLog[]
+  notifications  Notification[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      UserRole @default(admin)
+  companyId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+}
+
+model Terminal {
+  id                  String           @id @default(cuid())
+  companyId           String
+  name                String
+  code                String?
+  description         String?
+  address             String?
+  city                String?
+  state               String?
+  country             String           @default("Brasil")
+  installationType    InstallationType @default(terminal_combustiveis)
+  totalCapacityM3     Float?
+  mainProducts        String?
+  responsibleEngineer String?
+  status              TerminalStatus   @default(ativo)
+  createdBy           String
+  updatedBy           String
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id])
+  assets    Asset[]
+  projects  Project[]
+  documents Document[]
+  dossiers  Dossier[]
+
+  @@index([companyId])
+}
+
+model Asset {
+  id                 String      @id @default(cuid())
+  companyId          String
+  terminalId         String
+  code               String
+  name               String
+  type               AssetType
+  description        String?
+  status             AssetStatus @default(ativo)
+  product            String?
+  capacityM3         Float?
+  location           String?
+  designStandard     String?
+  commissioningDate  DateTime?
+  lastInspectionDate DateTime?
+  nextInspectionDate DateTime?
+  createdBy          String
+  updatedBy          String
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id])
+  terminal  Terminal   @relation(fields: [terminalId], references: [id])
+  documents Document[]
+
+  @@index([companyId])
+  @@index([terminalId])
+}
+
+model Project {
+  id          String            @id @default(cuid())
+  companyId   String
+  terminalId  String
+  name        String
+  code        String?
+  description String?
+  discipline  ProjectDiscipline
+  status      ProjectStatus     @default(planejado)
+  startDate   DateTime?
+  endDate     DateTime?
+  responsible String?
+  createdBy   String
+  updatedBy   String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id])
+  terminal  Terminal   @relation(fields: [terminalId], references: [id])
+  documents Document[]
+
+  @@index([companyId])
+  @@index([terminalId])
+}
+
+model DocumentCategory {
+  id          String   @id @default(cuid())
+  companyId   String?
+  name        String
+  description String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company   Company?   @relation(fields: [companyId], references: [id])
+  documents Document[]
+}
+
+model RegulatoryAgency {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  documentLinks DocumentAgency[]
+}
+
+model ReferenceStandard {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  documents Document[]
+}
+
+model Document {
+  id               String         @id @default(cuid())
+  companyId        String
+  terminalId       String?
+  assetId          String?
+  projectId        String?
+  categoryId       String
+  standardId       String?
+  title            String
+  code             String?
+  description      String?
+  documentType     String?
+  status           DocumentStatus @default(pendente)
+  revision         String         @default("R0")
+  issueDate        DateTime?
+  expirationDate   DateTime?
+  responsible      String?
+  tags             String?
+  currentVersionId String?        @unique
+  createdBy        String
+  updatedBy        String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  company        Company            @relation(fields: [companyId], references: [id])
+  terminal       Terminal?          @relation(fields: [terminalId], references: [id])
+  asset          Asset?             @relation(fields: [assetId], references: [id])
+  project        Project?           @relation(fields: [projectId], references: [id])
+  category       DocumentCategory   @relation(fields: [categoryId], references: [id])
+  standard       ReferenceStandard? @relation(fields: [standardId], references: [id])
+  agencies       DocumentAgency[]
+  versions       DocumentVersion[]  @relation("DocumentVersions")
+  currentVersion DocumentVersion?   @relation("CurrentDocumentVersion", fields: [currentVersionId], references: [id])
+  dossierItems   DossierDocument[]
+  notifications  Notification[]
+
+  @@index([companyId])
+  @@index([terminalId])
+  @@index([assetId])
+  @@index([projectId])
+  @@index([categoryId])
+}
+
+model DocumentAgency {
+  id         String   @id @default(cuid())
+  documentId String
+  agencyId   String
+  createdAt  DateTime @default(now())
+
+  document Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  agency   RegulatoryAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, agencyId])
+  @@index([agencyId])
+}
+
+model DocumentVersion {
+  id               String   @id @default(cuid())
+  documentId       String
+  versionNumber    Int
+  revision         String
+  fileName         String
+  originalFileName String
+  filePath         String
+  fileSize         Int
+  mimeType         String
+  notes            String?
+  isCurrent        Boolean  @default(false)
+  uploadedBy       String
+  createdAt        DateTime @default(now())
+
+  document          Document  @relation("DocumentVersions", fields: [documentId], references: [id])
+  currentForDocument Document? @relation("CurrentDocumentVersion")
+
+  @@index([documentId])
+}
+
+model Dossier {
+  id          String        @id @default(cuid())
+  companyId   String
+  terminalId  String?
+  name        String
+  description String?
+  type        DossierType
+  status      DossierStatus @default(rascunho)
+  createdBy   String
+  updatedBy   String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  company   Company           @relation(fields: [companyId], references: [id])
+  terminal  Terminal?         @relation(fields: [terminalId], references: [id])
+  documents DossierDocument[]
+
+  @@index([companyId])
+}
+
+model DossierDocument {
+  id         String   @id @default(cuid())
+  dossierId  String
+  documentId String
+  order      Int
+  createdAt  DateTime @default(now())
+
+  dossier  Dossier  @relation(fields: [dossierId], references: [id])
+  document Document @relation(fields: [documentId], references: [id])
+
+  @@unique([dossierId, documentId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  companyId   String
+  userId      String
+  entityType  String
+  entityId    String
+  action      String
+  description String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@index([entityType, entityId])
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  companyId  String
+  userId     String?
+  documentId String?
+  type       String
+  title      String
+  message    String
+  dueDate    DateTime?
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  company  Company   @relation(fields: [companyId], references: [id])
+  document Document? @relation(fields: [documentId], references: [id])
+
+  @@index([companyId])
+}

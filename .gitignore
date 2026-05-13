@@ -1,0 +1,10 @@
+.env
+.env*.local
+.DS_Store
+.next
+node_modules
+uploads/*
+!uploads/.gitkeep
+prisma/dev.db
+.tmp
+.vercel

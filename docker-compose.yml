@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ndocs-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ndocs
+      POSTGRES_PASSWORD: ndocs
+      POSTGRES_DB: ndocs
+    ports:
+      - "5432:5432"
+    volumes:
+      - ndocs-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  ndocs-postgres-data:

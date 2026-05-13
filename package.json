@@ -1,0 +1,51 @@
+{
+  "name": "ndocs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build --webpack",
+    "start": "next start",
+    "lint": "eslint .",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "node scripts/run-seed.mjs",
+    "db:reset": "prisma migrate reset --force"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "latest",
+    "@prisma/client": "^6.19.3",
+    "@radix-ui/react-slot": "latest",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4",
+    "class-variance-authority": "latest",
+    "clsx": "latest",
+    "date-fns": "latest",
+    "lucide-react": "latest",
+    "next": "16.2.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-hook-form": "latest",
+    "recharts": "latest",
+    "tailwind-merge": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "esbuild": "^0.28.0",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.2.6",
+    "postcss": "latest",
+    "prettier": "latest",
+    "prisma": "^6.19.3",
+    "tailwindcss": "3.4.17",
+    "tsx": "latest",
+    "typescript": "5.6.3"
+  },
+  "prisma": {
+    "seed": "node scripts/run-seed.mjs"
+  }
+}
